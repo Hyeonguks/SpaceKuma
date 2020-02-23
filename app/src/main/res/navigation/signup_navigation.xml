@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/signup_navigation"
+    app:startDestination="@+id/navigation_signup_login_navigator">
+
+    <fragment
+        android:id="@+id/navigation_signup_login_navigator"
+        android:name="com.example.spacekuma.fragments.SignUP_Login_Navigator_Fragment"
+        tools:layout="@layout/sign_up__login_navigator_fragment" >
+        <action
+            android:id="@+id/action_navigation_login_to_navigation_id"
+            app:destination="@id/navigation_id"
+            app:popEnterAnim="@anim/slide_from_left"
+            app:popExitAnim="@anim/slide_to_right"
+            app:enterAnim="@anim/slide_from_right"
+            app:exitAnim="@anim/slide_to_left"/>
+
+        <action
+            android:id="@+id/action_navigation_signup_login_navigator_to_navigation_login"
+            app:destination="@id/navigation_login"
+            app:popEnterAnim="@anim/slide_from_right"
+            app:popExitAnim="@anim/slide_to_left"
+            app:enterAnim="@anim/slide_from_left"
+            app:exitAnim="@anim/slide_to_right"
+
+            />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_id"
+        android:name="com.example.spacekuma.fragments.SignUP_ID_Fragment"
+        tools:layout="@layout/sign_up__id__fragment" >
+        <action
+            android:id="@+id/action_navigation_id_to_navigation_pw"
+            app:destination="@id/navigation_pw"
+            app:popEnterAnim="@anim/slide_from_left"
+            app:popExitAnim="@anim/slide_to_right"
+            app:enterAnim="@anim/slide_from_right"
+            app:exitAnim="@anim/slide_to_left"/>
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_pw"
+        android:name="com.example.spacekuma.fragments.SignUP_PW_Fragment"
+        tools:layout="@layout/sign_up__pw__fragment" >
+        <action
+            android:id="@+id/action_navigation_pw_to_navigation_name"
+            app:destination="@id/navigation_name"
+            app:popEnterAnim="@anim/slide_from_left"
+            app:popExitAnim="@anim/slide_to_right"
+            app:enterAnim="@anim/slide_from_right"
+            app:exitAnim="@anim/slide_to_left"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_name"
+        android:name="com.example.spacekuma.fragments.SignUP_Name_Fragment"
+        tools:layout="@layout/sign_up__name__fragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_login"
+        android:name="com.example.spacekuma.fragments.Login_Fragment"
+        tools:layout="@layout/login_fragment" >
+    </fragment>
+
+
+</navigation>

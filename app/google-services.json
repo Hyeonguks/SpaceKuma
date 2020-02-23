@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "268666175334",
+    "firebase_url": "https://spaekuma.firebaseio.com",
+    "project_id": "spaekuma",
+    "storage_bucket": "spaekuma.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268666175334:android:65339627a12d839c3452a7",
+        "android_client_info": {
+          "package_name": "com.example.spacekuma"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "268666175334-ajm9a4nlkjlpf2luhmffmvtljat1qrjg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ5lr8ZsIBRoR8l6b7sGs36bBU-byEGPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "268666175334-ajm9a4nlkjlpf2luhmffmvtljat1qrjg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
