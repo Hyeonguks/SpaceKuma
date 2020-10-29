@@ -35,12 +35,6 @@ class SignUPViewModel : ViewModel() {
 
     var loginModel : MyInfo_Model? = null
 
-    val _start = MutableLiveData<Boolean>().apply {
-        value = false
-    }
-
-    val start: LiveData<Boolean> = _start
-
     init {
 
 //        _________________________________________________________________________________________________________________________________________________________

@@ -3,9 +3,6 @@ package com.example.spacekuma.recycler_view_adapters
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -17,15 +14,22 @@ import com.example.spacekuma.data.NewsFeed_Model
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.util.Log
+import android.view.*
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.core.view.get
 import androidx.viewpager.widget.ViewPager
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.spacekuma.Test.ViewPagerAdapter
 import com.example.spacekuma.activities.Comment_Activity
+import com.example.spacekuma.activities.Edit_FeedActivity
 import com.example.spacekuma.activities.WriteFeedActivity
 import com.example.spacekuma.data.Check_Model
 import com.example.spacekuma.data.FeedDetail_Model
 import com.example.spacekuma.retrofit.ApiClient
 import com.example.spacekuma.util.TimeString
+import kotlinx.android.synthetic.main.news_feed_default_item.view.*
+import me.relex.circleindicator.CircleIndicator
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -36,43 +40,50 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
 
     companion object {
         const val TYPE_ONE = 1
-        const val TYPE_HEADER = 999
         const val TYPE_LOADING = 777
     }
 
-    inner class Header_ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val Con_Root = itemView.findViewById<ConstraintLayout>(R.id.Con_Root)
 
-        val Con_Image = itemView.findViewById<ConstraintLayout>(R.id.Con_Image)
-        val Con_Video = itemView.findViewById<ConstraintLayout>(R.id.Con_Video)
+    inner class Default_ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) , View.OnCreateContextMenuListener{
+        override fun onCreateContextMenu(menu: ContextMenu?,v: View?,menuInfo: ContextMenu.ContextMenuInfo?) {
+            val Edit = menu!!.add(Menu.NONE,1001,1,"수정")
+            val Delete = menu.add(Menu.NONE,1002,2,"삭제")
 
-        val User_Pic = itemView.findViewById<ImageView>(R.id.User_Pic)
-
-        fun bind(newsfeedModel: NewsFeed_Model, context: Context) {
-            User_Pic.background = ShapeDrawable(OvalShape())
-            User_Pic.clipToOutline = true
-
-            if (Pic == "0") {
-                User_Pic.setImageResource(R.drawable.ic_0)
-            } else {
-                GlideApp.with(context)
-                    .load(context.getString(R.string.address)+Pic)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(User_Pic)
-            }
-
-            Con_Image.setOnClickListener {
-                (context as Activity).startActivityForResult(Intent(context, WriteFeedActivity::class.java).putExtra("Num",Num).putExtra("ID",ID),777)
-            }
-
-            Con_Video.setOnClickListener {
-                (context as Activity).startActivityForResult(Intent(context, WriteFeedActivity::class.java).putExtra("Num",Num).putExtra("ID",ID),777)
-            }
+            Edit.setOnMenuItemClickListener(onMenuItemClickListener)
+            Delete.setOnMenuItemClickListener(onMenuItemClickListener)
         }
-    }
 
-    inner class Default_ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val onMenuItemClickListener : MenuItem.OnMenuItemClickListener = MenuItem.OnMenuItemClickListener {
+            when (it.itemId) {
+                1001 -> {
+                    (context as Activity).startActivityForResult(Intent(context, Edit_FeedActivity::class.java)
+                        .putExtra("Feed_Num",newsfeedList[adapterPosition].Feed_Num)
+                        .putExtra("Feed_Text",newsfeedList[adapterPosition].Feed_Text)
+                        .putExtra("Position",adapterPosition),666)
+                    return@OnMenuItemClickListener true
+                }
+                1002 -> {
+                    ApiClient.getClient.Delete_Feed_Item(newsfeedList[adapterPosition].Feed_Num).enqueue(object : Callback<Check_Model>{
+                        override fun onFailure(call: Call<Check_Model>, t: Throwable) {
+                            Toast.makeText(context,"다시 시도해주세요.",Toast.LENGTH_SHORT).show()
+                        }
+
+                        override fun onResponse(call: Call<Check_Model>,response: Response<Check_Model>) {
+                            if (response.isSuccessful && response.body()!!.Success) {
+                                newsfeedList.removeAt(adapterPosition)
+                                notifyItemRemoved(adapterPosition)
+                            } else {
+                                Toast.makeText(context,"삭제실패.",Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                    })
+                    return@OnMenuItemClickListener true
+                }
+            }
+            return@OnMenuItemClickListener false
+        }
+
         val ViewPager_FeedMedia = itemView.findViewById<ViewPager>(R.id.ViewPager_FeedMedia)
 
         val Con_Like = itemView.findViewById<ConstraintLayout>(R.id.Con_Like)
@@ -90,6 +101,10 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
         val TextView_Feed_Content = itemView.findViewById<TextView>(R.id.TextView_Feed_Content)
         val TextView_Limit_Comment = itemView.findViewById<TextView>(R.id.TextView_Limit_Comment)
 
+        val Btn_Edit = itemView.findViewById<ImageButton>(R.id.Btn_Edit)
+
+        val indicator = itemView.findViewById<CircleIndicator>(R.id.indicator)
+
         fun bind(newsfeedModel: NewsFeed_Model, context: Context) {
             Log.e("Default_ViewHolder", "Feed_Num : " + newsfeedModel.Feed_Num.toString())
             Log.e("Default_ViewHolder", "Liked : " + newsfeedModel.Liked)
@@ -100,12 +115,21 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
             TextView_Like_Count.text = countSetText(newsfeedModel.Like_Count)
             TextView_Comment_Count.text = countSetText(newsfeedModel.Comment_Count)
 
+            if (newsfeedModel.Writer_Num == Num) {
+                Btn_Edit.visibility = View.VISIBLE
+            } else {
+                Btn_Edit.visibility = View.GONE
+            }
+
+            Btn_Edit.setOnCreateContextMenuListener(this)
+
             Was_Liked(ImageView_Before_Like,ImageView_After_Like,newsfeedModel.Liked,Num)
 
             Feed_Item_Is_Limit_Comment(TextView_Limit_Comment,newsfeedModel.Limit_Comment)
 
             val viewPagerAdapter : ViewPagerAdapter =  ViewPagerAdapter(newsfeedModel.Feed_Media_Uri!!,context)
             ViewPager_FeedMedia.adapter = viewPagerAdapter
+            indicator.setViewPager(ViewPager_FeedMedia)
 
             ImageView_Before_Like.setOnClickListener {
                 Feed_Like(newsfeedModel.Feed_Num,Num,ImageView_Before_Like,ImageView_After_Like,TextView_Like_Count,newsfeedModel)
@@ -137,13 +161,6 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            TYPE_HEADER -> {
-                Header_ViewHolder(
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.news_feed_header_item, parent, false)
-                )
-            }
-
             TYPE_ONE -> {
                 Default_ViewHolder(
                     LayoutInflater.from(context)
@@ -168,13 +185,6 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
             is Default_ViewHolder -> {
                 holder.itemView.run {
                     holder.bind(newsfeedList[position],context)
-
-                }
-            }
-
-            is Header_ViewHolder -> {
-                holder.itemView.run {
-                    holder.bind(newsfeedList[position],context)
                 }
             }
 
@@ -195,14 +205,9 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
     override fun getItemViewType(position: Int): Int {
         return when (newsfeedList[position].View_Type) {
             1 -> TYPE_ONE
-            999 -> TYPE_HEADER
             777 -> TYPE_LOADING
             else -> TYPE_ONE
         }
-    }
-
-    fun addHeaderItem() {
-        newsfeedList.add(NewsFeed_Model(0,TYPE_HEADER,0,0,0,0,true,true,"","","",null,"","",""))
     }
 
     fun addLoadingItem() {
@@ -240,6 +245,7 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
         }
     }
 
+    // 댓글 제한 기능인데 아직 추가된 기능이 아닙니다.
     fun Feed_Item_Is_Limit_Comment(TextView_Limit_Comment : TextView ,Limit_Comment : Boolean) {
         if (Limit_Comment) {
             TextView_Limit_Comment.visibility = View.VISIBLE
@@ -260,6 +266,7 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
                         Btn_Like.visibility = View.GONE
                         Btn_UnLike.visibility = View.VISIBLE
                         newsfeedModel.Like_Count = newsfeedModel.Like_Count + 1
+                        newsfeedModel.Liked = Num
                         Like_CountView.text = countSetText(newsfeedModel.Like_Count)
                     } else {
 
@@ -283,6 +290,7 @@ class NewsFeed_Adapter(val Num : Int, val ID : String, val Pic : String, val con
                     if (response.body()!!.Success) {
                         Btn_UnLike.visibility = View.GONE
                         Btn_Like.visibility = View.VISIBLE
+                        newsfeedModel.Liked = 0
                         newsfeedModel.Like_Count = newsfeedModel.Like_Count - 1
                         Like_CountView.text = countSetText(newsfeedModel.Like_Count)
                     } else {

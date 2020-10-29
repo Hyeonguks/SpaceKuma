@@ -46,7 +46,7 @@ class Chat_Room_Adapter(val myNum : Int,var context: Context ,var roomList : Arr
                         itemView.User_Pic.setImageResource(R.drawable.ic_0)
                     } else {
                         GlideApp.with(context)
-                            .load(context.getString(R.string.address)+i.Pic)
+                            .load(context.getString(R.string.address_media)+i.Pic)
                             .centerCrop()
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(itemView.User_Pic)

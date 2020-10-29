@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -17,7 +18,6 @@ import com.example.spacekuma.R
 import com.example.spacekuma.data.Check_Model
 import com.example.spacekuma.data.Comment_Model
 import com.example.spacekuma.data.FeedDetail_Model
-import com.example.spacekuma.data.NewsFeed_Model
 import com.example.spacekuma.retrofit.ApiClient
 import com.example.spacekuma.util.TimeString
 import kotlinx.android.synthetic.main.news_feed_comment_header_item.view.*
@@ -33,12 +33,14 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
     companion object {
         const val TYPE_ONE = 1
         const val TYPE_TWO = 2
+        const val TYPE_THREE = 3
+        const val TYPE_FOUR = 4
         const val TYPE_HEADER = 999
         const val TYPE_LOADING = 777
     }
 
     interface ItemClick{
-        fun onReplyClick(view : View, feedNum: Int, Comment_Num : Int,Writer_Name : String, Comment_Text : String)
+        fun onReplyClick(view : View, feedNum: Int, Comment_Num : Int,Writer_Name : String, Comment_Text : String, event_code : Int)
     }
 
     var itemClick : ItemClick? = null
@@ -46,31 +48,27 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             TYPE_HEADER -> {
-                Header_ViewHolder(
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.news_feed_comment_header_item, parent, false)
-                )
+                Header_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_comment_header_item, parent, false))
             }
 
             TYPE_ONE -> {
-                Comment_ViewHolder(
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.news_feed_comment_item, parent, false)
-                )
+                Comment_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_comment_item, parent, false))
             }
 
             TYPE_TWO -> {
-                ReComment_ViewHolder(
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.news_feed_recomment_item, parent, false)
-                )
+                ReComment_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_recomment_item, parent, false))
+            }
+
+            TYPE_THREE -> {
+                Comment_Deleted_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_comment_deleted_item, parent, false))
+            }
+
+            TYPE_FOUR -> {
+                ReComment_Deleted_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_recomment_deleted_item, parent, false))
             }
 
             TYPE_LOADING -> {
-                Loading_ViewHolder(
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.news_feed_loading_item, parent, false)
-                )
+                Loading_ViewHolder(LayoutInflater.from(context).inflate(R.layout.news_feed_loading_item, parent, false))
             }
 
             else -> throw IllegalArgumentException("Invalid view type")
@@ -100,7 +98,7 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
                                 itemView.ImageView_Writer_Pic.setImageResource(R.drawable.ic_0)
                             } else {
                                 GlideApp.with(context)
-                                    .load(context.getString(R.string.address)+response.body()!!.Writer_Pic)
+                                    .load(context.getString(R.string.address_media)+response.body()!!.Writer_Pic)
                                     .centerCrop()
                                     .transition(DrawableTransitionOptions.withCrossFade())
                                     .into(itemView.ImageView_Writer_Pic)
@@ -112,7 +110,6 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
 
                     }
                 }
-
             })
         }
     }
@@ -128,18 +125,15 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
             itemView.TextView_Like_Count.text = set_LikeCount_Text(commentModel.Like_Count,itemView.TextView_Like_Count)
             itemView.TextView_Recomment_Count.text = ReComment_CountView(commentModel,commentModel.ReComment_Count,itemView.Con_Get_ReComment)
             itemView.TextView_Comment.text = commentModel.Comment_Text
+            itemView.Con_Comment_Edit.visibility = View.GONE
 
             setUserProfile_Pic(itemView.ImageView_Writer_Pic,context,commentModel.Writer_Pic)
+            WasMyComment(itemView.TextView_Edit_Btn,itemView.TextView_Delete_Btn,commentModel.Writer_Num,Num)
             Was_Liked(itemView.ImageView_Before_Like,itemView.ImageView_After_Like,commentModel.Liked,Num)
-
-            // 답글 가져오기
-            itemView.Con_Get_ReComment.setOnClickListener {
-
-            }
 
             // 답글 달기
             itemView.TextView_ReComment_Btn.setOnClickListener {
-                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Comment_Num,commentModel.Writer_Name,commentModel.Comment_Text)
+                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Comment_Num,commentModel.Writer_Name,commentModel.Comment_Text,1)
             }
 
             // 대댓글 불러오기 클릭하면 2개씩 불러옴. 그렇다면 대댓글 개수도 2씩 빼줘야함.
@@ -162,6 +156,31 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
                 Comment_UnLike(commentModel.Comment_Num,Num,itemView.ImageView_Before_Like,itemView.ImageView_After_Like,itemView.TextView_Like_Count,commentModel)
             }
 
+            itemView.Btn_Edit_Finish.setOnClickListener {
+                Update_Comment(commentModel.Comment_Num,itemView.EditText_Comment.text.toString(),adapterPosition)
+            }
+
+            itemView.TextView_Edit_Btn.setOnClickListener {
+                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Comment_Num,commentModel.Writer_Name,commentModel.Comment_Text,2)
+                itemView.Con_Comment_Edit.visibility = View.VISIBLE
+                itemView.EditText_Comment.setText(commentModel.Comment_Text)
+            }
+
+            itemView.TextView_Delete_Btn.setOnClickListener {
+                val items = arrayOf("취소","삭제")
+                val builder = AlertDialog.Builder(context)
+                with(builder) {
+                    setTitle("해당 댓글을 삭제하실래요?")
+                    setItems(items) { dialog, which ->
+                        when (which) {
+                            0 -> dialog.dismiss()
+                            1 -> Delete_Comment(commentModel.Comment_Num,adapterPosition,Check_Comment_ViewType(commentModel.View_Type))
+                        }
+                    }
+                    show()
+                }
+            }
+
         }
     }
 
@@ -175,14 +194,15 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
             itemView.TextView_Uploaded_Date.text = TimeString.formatTimeString(commentModel.Uploaded_Date)
             itemView.TextView_Like_Count.text = set_LikeCount_Text(commentModel.Like_Count,itemView.TextView_Like_Count)
             itemView.TextView_Comment.text = commentModel.Comment_Text
+            itemView.Con_Comment_Edit.visibility = View.GONE
 
             setUserProfile_Pic(itemView.ImageView_Writer_Pic,context,commentModel.Writer_Pic)
-
+            WasMyComment(itemView.TextView_Edit_Btn,itemView.TextView_Delete_Btn,commentModel.Writer_Num,Num)
             Was_Liked(itemView.ImageView_Before_Like,itemView.ImageView_After_Like,commentModel.Liked,Num)
 
             // 답글 달기
             itemView.TextView_ReComment_Btn.setOnClickListener {
-                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Parent_Num,commentModel.Writer_Name,commentModel.Comment_Text)
+                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Parent_Num,commentModel.Writer_Name,commentModel.Comment_Text,1)
             }
 
             itemView.ImageView_Before_Like.setOnClickListener {
@@ -192,6 +212,45 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
             itemView.ImageView_After_Like.setOnClickListener {
                 Comment_UnLike(commentModel.Comment_Num,Num,itemView.ImageView_Before_Like,itemView.ImageView_After_Like,itemView.TextView_Like_Count,commentModel)
             }
+
+            itemView.Btn_Edit_Finish.setOnClickListener {
+                Update_Comment(commentModel.Comment_Num,itemView.EditText_Comment.text.toString(),adapterPosition)
+            }
+
+            itemView.TextView_Edit_Btn.setOnClickListener {
+                itemClick?.onReplyClick(it,commentModel.Feed_Num,commentModel.Comment_Num,commentModel.Writer_Name,commentModel.Comment_Text,2)
+                itemView.Con_Comment_Edit.visibility = View.VISIBLE
+            }
+
+            itemView.TextView_Delete_Btn.setOnClickListener {
+                val items = arrayOf("취소","삭제")
+                val builder = AlertDialog.Builder(context)
+                with(builder) {
+                    setTitle("해당 댓글을 삭제하실래요?")
+                    setItems(items) { dialog, which ->
+                        when (which) {
+                            0 -> dialog.dismiss()
+                            1 -> Delete_Comment(commentModel.Comment_Num,adapterPosition,Check_Comment_ViewType(commentModel.View_Type))
+                        }
+                    }
+                    show()
+                }
+            }
+
+        }
+    }
+
+    inner class Comment_Deleted_ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        fun bind(commentModel: Comment_Model, context: Context) {
+
+        }
+    }
+
+    inner class ReComment_Deleted_ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        fun bind(commentModel: Comment_Model, context: Context) {
+
         }
     }
 
@@ -223,6 +282,18 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
                 }
             }
 
+            is Comment_Deleted_ViewHolder -> {
+                holder.itemView.run {
+                    holder.bind(commentList[position],context)
+                }
+            }
+
+            is ReComment_Deleted_ViewHolder -> {
+                holder.itemView.run {
+                    holder.bind(commentList[position],context)
+                }
+            }
+
             is Loading_ViewHolder -> {
                 holder.itemView.run {
                     holder.bind(commentList[position],context)
@@ -236,6 +307,8 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
         return when (commentList[position].View_Type) {
             1 -> TYPE_ONE
             2 -> TYPE_TWO
+            3 -> TYPE_THREE
+            4 -> TYPE_FOUR
             999 -> TYPE_HEADER
             777 -> TYPE_LOADING
             else -> TYPE_ONE
@@ -244,6 +317,53 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
 
     override fun getItemCount(): Int {
         return commentList.size
+    }
+
+    fun Check_Comment_ViewType(ViewType: Int) : Int {
+        if (ViewType == 1) {
+            return 3
+        } else if (ViewType == 2) {
+            return 4
+        } else {
+            return 0
+        }
+    }
+
+    fun Delete_Comment(Num: Int,Position: Int, ViewType : Int) {
+        ApiClient.getClient.Delete_Comment_Item(Num,ViewType).enqueue(object : Callback<Check_Model>{
+            override fun onFailure(call: Call<Check_Model>, t: Throwable) {
+                Log.d("Comment_Adapter : Delete_Comment","onFailure :$t")
+            }
+
+            override fun onResponse(call: Call<Check_Model>, response: Response<Check_Model>) {
+                if (response.isSuccessful && response.body()!!.Success) {
+                    Log.d("Comment_Adapter : Delete_Comment","onResponse : isSuccessful")
+                    commentList[Position].View_Type = ViewType
+                    notifyItemChanged(Position)
+                } else {
+                    Log.d("Comment_Adapter : Delete_Comment","onResponse : isNotSuccessful : ${response}")
+                }
+            }
+        })
+    }
+
+    fun Update_Comment(Num: Int, Comment_Text: String,position: Int) {
+        ApiClient.getClient.Update_Comment_Item(Num,Comment_Text).enqueue(object : Callback<Check_Model> {
+            override fun onFailure(call: Call<Check_Model>, t: Throwable) {
+                Log.d("Update_Comment : Update_Comment","onFailure : $t")
+            }
+
+            override fun onResponse(call: Call<Check_Model>, response: Response<Check_Model>) {
+                if (response.isSuccessful && response.body()!!.Success) {
+                    Log.d("Update_Comment : Update_Comment","onResponse : isSuccessful")
+                    commentList[position].Comment_Text = Comment_Text
+                    notifyItemChanged(position)
+                } else {
+                    Log.d("Update_Comment : Update_Comment","onResponse : isNotSuccessful : $response")
+                }
+            }
+
+        })
     }
 
     fun addHeaderItem() {
@@ -331,13 +451,6 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
         })
     }
 
-//    Get_ReComment_Item(Feed_Num,
-//    Num,
-//    adapterPosition,
-//    commentModel.Parent_Num,
-//    Check_Last_ReComment(adapterPosition),
-//    commentModel)
-
     // 해당 댓글 또는 대댓글에 좋아요 개수에 대하여 적절한 문자열 반환
     fun set_LikeCount_Text(Like_Count : Int, LikeCount_TextView : TextView) : String {
         if (Like_Count == 0) {
@@ -360,13 +473,23 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
         }
     }
 
+    fun WasMyComment(Btn_Edit : TextView, Btn_Delete : TextView, Who_Commented : Int, Num : Int) {
+        if (Who_Commented == Num) {
+            Btn_Edit.visibility = View.VISIBLE
+            Btn_Delete.visibility = View.VISIBLE
+        } else {
+            Btn_Edit.visibility = View.GONE
+            Btn_Delete.visibility = View.GONE
+        }
+    }
+
     // 댓글 작성자의 프로필 사진을 불러오는 메소
     fun setUserProfile_Pic (ImageView : ImageView, context: Context, fileName : String) {
         if (fileName == "0") {
             ImageView.setImageResource(R.drawable.ic_0)
         } else {
             GlideApp.with(context)
-                .load(context.getString(R.string.address)+fileName)
+                .load(context.getString(R.string.address_media)+fileName)
                 .centerCrop()
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(ImageView)
@@ -384,6 +507,7 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
                     if (response.body()!!.Success) {
                         Btn_Like.visibility = View.GONE
                         Btn_UnLike.visibility = View.VISIBLE
+                        commentModel.Liked = Num
                         commentModel.Like_Count = commentModel.Like_Count + 1
                         Like_CountView.text = set_LikeCount_Text(commentModel.Like_Count,Like_CountView)
                     } else {
@@ -410,6 +534,7 @@ class Comment_Adapter(val Feed_Num : Int,val Num : Int, val context: Context, va
                     if (response.body()!!.Success) {
                         Btn_Like.visibility = View.VISIBLE
                         Btn_UnLike.visibility = View.GONE
+                        commentModel.Liked = 0
                         commentModel.Like_Count = commentModel.Like_Count - 1
                         Like_CountView.text = set_LikeCount_Text(commentModel.Like_Count,Like_CountView)
                     } else {

@@ -7,8 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -16,43 +18,39 @@ import androidx.navigation.Navigation
 
 import com.example.spacekuma.BR
 import com.example.spacekuma.R
+import com.example.spacekuma.databinding.SignUpNameFragmentBinding
 import com.example.spacekuma.databinding.SignUpPwFragmentBinding
 import com.example.spacekuma.view_models.signup.SignUPViewModel
+import kotlinx.android.synthetic.main.sign_up__id__fragment.view.*
 import kotlinx.android.synthetic.main.sign_up__pw__fragment.view.*
 import kotlinx.android.synthetic.main.sign_up__pw__fragment.view.Btn_Next
+import kotlinx.android.synthetic.main.sign_up__pw__fragment.view.toolbar
 
-class SignUP_PW_Fragment : Fragment() {
+class SignUP_PW_Fragment : SignUPBaseFragment<SignUpPwFragmentBinding>(), View.OnClickListener {
 
     /*
-    1. Login_And_SignUP_Activity 에 필요한 플래그먼트 4개 중 1개입니다.
-    2. 이동 순서 SignUP_Login_Navigator_Fragment -> SignUP_ID_Fragment -> **SignUP_PW_Fragment** -> SignUP_Name_Fragment -> 가입완료 ->  SignUP_Login_Navigator_Fragment
-    3. (1).툴바 셋업, (2).소프트키보드 완료 버튼 클릭 이벤트 처리, (3).화면이동, (4).비밀번호 보기 CheckBox 이벤트 처리
+    참고 사이트 : Navigation + Fragment + Toolbar + 뒤로가기 버튼 적용
+    https://stackoverflow.com/questions/26651602/display-back-arrow-on-toolbar
+    http://susemi99.kr/5438/
+
+    1. 프로그먼트 이동순서 : Login_Fragment <-> (메인플래그먼트)SignUP_Login_Navigator_Fragment <-> *SignUP_ID_Fragment* <-> SignUP_PW_Fragment <-> SignUP_Name_Fragment
      */
 
-    private lateinit var signUPViewModel: SignUPViewModel
-    lateinit var bind : SignUpPwFragmentBinding
+    override val layoutID: Int = R.layout.sign_up__pw__fragment
+    override val BRName: Int = BR.pw
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        bind = DataBindingUtil.inflate(inflater, R.layout.sign_up__pw__fragment,container,false)
-
-        signUPViewModel = ViewModelProviders.of(activity!!).get(SignUPViewModel::class.java)
-        bind.setVariable(BR.pw,signUPViewModel)
-
-//        (1).툴바 셋업
-        (activity as AppCompatActivity).setSupportActionBar(bind.root.toolbar)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
-        bind.root.toolbar.setNavigationOnClickListener {
-            Navigation.findNavController(bind.root).navigateUp()
+    override fun Init() {
+        (activity as AppCompatActivity).run {
+            setSupportActionBar(bind.root.toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
 
-//        (2).소프트키보드 완료 버튼 클릭 이벤트 처리
+        bind.root.Btn_Next.setOnClickListener(this)
+
         bind.root.editText_pw.setOnEditorActionListener(TextView.OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                if (signUPViewModel.PassWord_Boolean.get()!!) {
+                if (viewModel.PassWord_Boolean.get()!!) {
                     Navigation.findNavController(bind.root).navigate(R.id.action_navigation_pw_to_navigation_name)
-                } else {
-
                 }
                 return@OnEditorActionListener true
             } else {
@@ -60,12 +58,6 @@ class SignUP_PW_Fragment : Fragment() {
             }
         })
 
-//        (3).화면이동
-        bind.root.Btn_Next.setOnClickListener {
-            Navigation.findNavController(bind.root).navigate(R.id.action_navigation_pw_to_navigation_name)
-        }
-
-//        (4).비밀번호 보기 CheckBox 이벤트 처리
         bind.root.checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
                 bind.root.editText_pw.transformationMethod = HideReturnsTransformationMethod.getInstance()
@@ -75,7 +67,12 @@ class SignUP_PW_Fragment : Fragment() {
             bind.root.editText_pw.setSelection(bind.root.editText_pw.text.length)
         }
 
-        return bind.root
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.Btn_Next -> { Navigation.findNavController(bind.root).navigate(R.id.action_navigation_pw_to_navigation_name) }
+        }
     }
 
 }

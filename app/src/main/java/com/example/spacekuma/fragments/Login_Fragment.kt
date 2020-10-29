@@ -53,12 +53,12 @@ class Login_Fragment: Fragment() {
 //        (1).툴바 셋업
         (activity as AppCompatActivity).setSupportActionBar(bind.root.home_toolbar)
         (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
-        bind.root.Btn_Back.setOnClickListener {Navigation.findNavController(bind.root).navigateUp()}
+        bind.root.Btn_Back.setOnClickListener { Navigation.findNavController(bind.root).navigateUp() }
 
 //        (2).소프트 키보드 완료버튼 클릭 이벤트 처리
         bind.root.editText_PassWord.setOnEditorActionListener(TextView.OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-//                bind.root.editText_PassWord.setfo
+
                 return@OnEditorActionListener true
             } else {
                 false
@@ -97,7 +97,7 @@ class Login_Fragment: Fragment() {
                                 }, {
                                     Log.e("MyTag", it.message)
                                 })
-                            disposable?.add(Login_Ob)
+                            disposable.add(Login_Ob)
 
                             val pref : SharedPreferences = activity!!.getSharedPreferences("LoginInfo",0)
                             val editor: SharedPreferences.Editor = pref.edit()
@@ -114,7 +114,6 @@ class Login_Fragment: Fragment() {
                                     .putExtra("Pic",response.body()?.myinfoModel?.Pic)
                                     .putExtra("Date",response.body()?.myinfoModel?.Date)
                                     .putExtra("Token",response.body()?.myinfoModel?.Token)
-
                             )
                             dispose()
                             activity!!.finish()

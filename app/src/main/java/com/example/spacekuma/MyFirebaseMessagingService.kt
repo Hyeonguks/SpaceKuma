@@ -62,54 +62,46 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
                 확인 결과 FCM 은 현재 앱이 실행중일때는 오지 않음..
                 그리고 실행중이지 않을때는 오더라.
-
              */
 
-            if (remoteMessage.data["event_code"] == "0") {
-                Log.d("FCM_New_Message", "event_code: 0")
-
-            } else if(remoteMessage.data["event_code"] == "new_chatMessage") {
+            if(remoteMessage.data["event_code"] == "new_chatMessage") {
                 Log.d("FCM_New_Message", "event_code: new_chatMessage")
                 var newChatItem = Gson().fromJson(remoteMessage.data["message"], Chat_Message_Model::class.java)
                 var newChatItemIntent = Intent("newMessage")
                 newChatItemIntent.putExtra("newItem",newChatItem).putExtra("Room_Num",newChatItem.Room_Num)
                 LocalBroadcastManager.getInstance(this).sendBroadcast(newChatItemIntent)
+
             } else if (remoteMessage.data["event_code"] == "invited_chatRoom") {
                 Log.d("FCM_New_Message", "invited_chatRoom")
                 var newChatRoomItem = Gson().fromJson(remoteMessage.data["message"], Chat_Room_Model::class.java)
                 var newChatRoomItemIntent = Intent("newChatRoom").putExtra("newChatRoomItem",newChatRoomItem).putExtra("Room_Num",newChatRoomItem.Room_Num)
                 LocalBroadcastManager.getInstance(this).sendBroadcast(newChatRoomItemIntent)
+
             } else if (remoteMessage.data["event_code"] == "video_call") {
                 Log.d("FCM_New_Message", "event_code: video_call")
-
-            } else {
-                Log.d("FCM_New_Message", "event_code: else")
-
-            }
-
-//            var test = Gson().fromJson(remoteMessage.data["message"], Chat_Message_Model::class.java)
-//            Log.d(TAG, "Notification Message data: ${test}")
-//
-//            if (ChatActivity.Room_Num != 0) {
-//                ChatActivity.chatList.add(test)
-//            } else {
-//
-//            }
-
-            var invited_info = Gson().fromJson(remoteMessage.data["message"], Invited_Model::class.java)
-            Log.d(TAG, "Notification Message data: ${invited_info}")
-
-            if (invited_info.Event_Code == 0) {
-
-            } else {
+                var invited_info = Gson().fromJson(remoteMessage.data["message"], Invited_Model::class.java)
                 startActivity(Intent(this, InvitedActivity::class.java)
-//                    .putExtra("Inviter_Socket",invited_info.Opener_Socket)
+                    .putExtra("Inviter_Socket",invited_info.Opener_Socket)
                     .putExtra("Inviter_ID",invited_info.Opener_ID)
                     .putExtra("Inviter_Name",invited_info.Opener_Name)
                     .putExtra("Inviter_Num",invited_info.Opener_Num)
                     .putExtra("Inviter_Pic",invited_info.Opener_Pic)
                     .putExtra("Inviter_Token",invited_info.Opener_Token)
                     .putExtra("Inviter_Room_Num",invited_info.Room_Num).addFlags(FLAG_ACTIVITY_NEW_TASK))
+            } else if (remoteMessage.data["event_code"] == "video_call_inviter_cancel") {
+                Log.d("FCM_New_Message", "event_code: video_call_inviter_cancel")
+                var videoCallCancelIntent = Intent("video_CallCancel").putExtra("cancel",true)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(videoCallCancelIntent)
+            } else if (remoteMessage.data["event_code"] == "video_call_deny") {
+                Log.d("FCM_New_Message", "event_code: video_call_deny")
+                var videoCallDenyIntent = Intent("video_CallDeny").putExtra("deny",true)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(videoCallDenyIntent )
+            } else if (remoteMessage.data["event_code"] == "video_call_accept") {
+                Log.d("FCM_New_Message", "event_code: video_call_accept")
+                var videoCallAcceptIntent = Intent("video_CallAccept").putExtra("accept",true)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(videoCallAcceptIntent )
+            } else {
+                Log.d("FCM_New_Message", "event_code: else")
             }
 
         }

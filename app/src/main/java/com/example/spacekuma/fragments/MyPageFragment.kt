@@ -15,11 +15,14 @@ import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.spacekuma.BR
+import com.example.spacekuma.GlideApp
 import com.example.spacekuma.R
 import com.example.spacekuma.activities.Edit_ProfileActivity
 import com.example.spacekuma.activities.Login_And_SignUP_Activity
 import com.example.spacekuma.databinding.FragmentMypageBinding
 import com.example.spacekuma.view_models.main.MainViewModel
+import kotlinx.android.synthetic.main.activity_user__profile.*
+import kotlinx.android.synthetic.main.fragment_mypage.*
 
 import kotlinx.android.synthetic.main.fragment_mypage.view.*
 
@@ -42,7 +45,7 @@ class MyPageFragment : Main_Base_Fragment<FragmentMypageBinding>() {
             bind.root.User_Image.setImageResource(R.drawable.ic_0)
         } else {
             Glide.with(this@MyPageFragment)
-                .load(getString(R.string.address)+viewModel.Pic.get())
+                .load(getString(R.string.address_media)+viewModel.Pic.get())
                 .centerCrop()
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(bind.root.User_Image)
@@ -88,7 +91,19 @@ class MyPageFragment : Main_Base_Fragment<FragmentMypageBinding>() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 999 && resultCode == Activity.RESULT_OK) {
-            viewModel.Name.set(data!!.getStringExtra("Name"))
+            if ("Pic" == data!!.getStringExtra("eventCode")) {
+                viewModel.Name.set(data.getStringExtra("Name"))
+                viewModel.Pic.set(data.getStringExtra("imageUri"))
+                GlideApp.with(activity!!)
+                    .load(data.getStringExtra("imageUri"))
+                    .centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(User_Image)
+            } else if ("Name" == data.getStringExtra("eventCode")) {
+                viewModel.Name.set(data.getStringExtra("Name"))
+            } else {
+
+            }
         } else {
 
         }

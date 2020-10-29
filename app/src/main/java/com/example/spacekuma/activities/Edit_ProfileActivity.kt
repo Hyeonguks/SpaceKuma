@@ -83,7 +83,7 @@ class Edit_ProfileActivity : AppCompatActivity() {
                 User_Pic.setImageResource(R.drawable.ic_0)
             } else {
                 Glide.with(this@Edit_ProfileActivity)
-                    .load(getString(R.string.address)+Pic)
+                    .load(getString(R.string.address_media)+Pic)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(User_Pic)
@@ -286,7 +286,7 @@ class Edit_ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     if (response.body()!!.Success) {
                         Log.d("onResponse", ": 프로필 사진 변경 성공 -> :"+ response.body()!!.Message)
-                        setResult(RESULT_OK)
+                        setResult(RESULT_OK,intent.putExtra("eventCode","Pic").putExtra("Name",Edit_Name).putExtra("imageUri",Image_Uri))
                         finish()
                     } else {
                         Log.d("onResponse", ": Test1 -> :"+ response.body()!!.Message)
@@ -311,7 +311,7 @@ class Edit_ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     if (response.body()!!.Success) {
                         // 프로필 사진도 변경하면 현재 home 에 있는 프로필 사진은 변경되지 않음.
-                        setResult(RESULT_OK,intent.putExtra("Name",Edit_Name))
+                        setResult(RESULT_OK,intent.putExtra("eventCode","Name").putExtra("Name",Edit_Name))
                         finish()
                     } else {
                         Log.d("onResponse", ": Test1 -> :"+ response.body()!!.Message)

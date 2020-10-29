@@ -154,13 +154,40 @@ interface ApiInterface {
     fun Get_Room_List (
         @Field("Num") user_Num: Int
     ) : Call<ArrayList<Chat_Room_Model>>
+//
+//    @Headers("Authorization: key=AAAAPo3Af2Y:APA91bFuScy8_Ng3rkVnvBnIFzj3aIhjqMzJce-bTSQQd6DLxD2GlbMB8NQJT8Nv5__HnTWbD4klj0E_Karcxrw-oNwZwyKK67Rto4R04AyQEwZQWwehaTk6WB_KuL9Z8QlmE0ybX3ip",
+//            "Content-Type:application/json")
+//    @POST("fcm/send")
+//    fun Send_FCM (
+//        @Body body:NotificationRequest
+//    ) : Call<ResponseBody>
 
-    @Headers("Authorization: key=AAAAPo3Af2Y:APA91bFuScy8_Ng3rkVnvBnIFzj3aIhjqMzJce-bTSQQd6DLxD2GlbMB8NQJT8Nv5__HnTWbD4klj0E_Karcxrw-oNwZwyKK67Rto4R04AyQEwZQWwehaTk6WB_KuL9Z8QlmE0ybX3ip",
-            "Content-Type:application/json")
-    @POST("fcm/send")
-    fun Send_FCM (
-        @Body body:NotificationRequest
-    ) : Call<ResponseBody>
+    @FormUrlEncoded
+    @POST("update_feed_item.php")
+    fun Update_Feed_Item (
+        @Field("Feed_Num") feedNum: Int,
+        @Field("Feed_Text") feedText: String
+    ) : Call<Check_Model>
+
+    @FormUrlEncoded
+    @POST("delete_feed_item.php")
+    fun Delete_Feed_Item (
+        @Field("Feed_Num") feedNum: Int
+    ) : Call<Check_Model>
+
+    @FormUrlEncoded
+    @POST("update_comment_item.php")
+    fun Update_Comment_Item (
+        @Field("Comment_Num") commentNum: Int,
+        @Field("Comment_Text") commentText: String
+    ) : Call<Check_Model>
+
+    @FormUrlEncoded
+    @POST("delete_comment_item.php")
+    fun Delete_Comment_Item (
+        @Field("Comment_Num") feedNum: Int,
+        @Field("View_Type") viewType: Int
+    ) : Call<Check_Model>
 
 
 

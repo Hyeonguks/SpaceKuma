@@ -46,10 +46,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:text="1시간 전"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toTopOf="@+id/Con_Get_ReComment"
+        android:textSize="10sp"
         app:layout_constraintStart_toEndOf="@+id/ImageView_Writer_Pic"
         app:layout_constraintTop_toBottomOf="@+id/TextView_Comment" />
 
@@ -60,10 +58,77 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="답글 달기"
-        android:textSize="12sp"
+        android:textSize="10sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/TextView_Like_Count"
         app:layout_constraintTop_toBottomOf="@+id/TextView_Comment" />
+
+    <TextView
+        android:id="@+id/TextView_Edit_Btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="수정하기"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/TextView_ReComment_Btn"
+        app:layout_constraintTop_toBottomOf="@+id/TextView_Comment" />
+
+    <TextView
+        android:id="@+id/TextView_Delete_Btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="삭제하기"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/TextView_Edit_Btn"
+        app:layout_constraintTop_toBottomOf="@+id/TextView_Comment" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/Con_Comment_Edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TextView_Uploaded_Date">
+
+        <EditText
+            android:id="@+id/EditText_Comment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:ems="10"
+            android:gravity="start|top"
+            android:hint="수정할 내용 입력.."
+            android:inputType="textMultiLine"
+            android:maxHeight="72dp"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Btn_Edit_Finish"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.545" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/Btn_Edit_Finish"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="수정"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Con_Like"
@@ -110,7 +175,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="좋아요 5개"
-        android:textSize="12sp"
+        android:textSize="10sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/TextView_Uploaded_Date"
         app:layout_constraintTop_toBottomOf="@+id/TextView_Comment" />
@@ -120,12 +185,11 @@
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="0dp"
         android:layout_height="32dp"
-        android:layout_marginTop="8dp"
         android:padding="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/TextView_Uploaded_Date">
+        app:layout_constraintTop_toBottomOf="@+id/Con_Comment_Edit">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/Con_LineView"
@@ -153,4 +217,5 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

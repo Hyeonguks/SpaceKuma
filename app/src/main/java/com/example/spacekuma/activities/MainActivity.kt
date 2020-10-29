@@ -1,5 +1,6 @@
 package com.example.spacekuma.activities
 
+import android.app.Application
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -29,17 +30,21 @@ import org.json.JSONObject
 import java.net.URISyntaxException
 
 class MainActivity : AppCompatActivity() {
+    /*
+    1. HomeFragment,ChatFragment,MyPageFragment 현재는 3개 프래그먼트만 사용중이지만,
+    NotificationsFragment 도 있었지만, 현재는 FCM 쪽 기능 구현이 부족하기때문 제작하지 않음.
+
+    2. Socket.io 로 소켓 연결 중이다. 문제는 소켓아이오는 소켓아이디를 내부적에서 랜덤으로 고유한 아이디를 생성한다고 한다.
+    그래서 검색해보니 소켓아이디를 사용자가 지정해줄수있나 찾아봤지만, 제대로 작동하지 않거나 권유하지 않는 방법이라한다.
+    그러고보니 자바 소켓서버를 열때도 그랬었나.....?
+    아무튼 굳이 소켓아이디를 지정하려던 이유는 소켓통신을 하려면 상대방 소켓을 알아야하기때문에 소켓아이디를 찾는 등
+    코드가 길어지니까 사용자 아이디로 직접 정할 수 있다면 참 좋을 것 같다고 생각했는데 방법이 없는건가? 다음에 다시 찾아보자
+     */
+
     private val HOME = "HOME"
     private val CHAT = "CHAT"
     private val NOTIFICATIONS = "NOTIFICATIONS"
     private val MYPAGE = "MYPAGE"
-
-    var Num : Int? = null
-    var ID : String? = null
-    var Name : String? = null
-    var Pic : String? = null
-    var Date : String? = null
-    var Token : String? = null
 
     var homeFragment : HomeFragment? = null
     var chatFragment : ChatFragment? = null
@@ -59,40 +64,14 @@ class MainActivity : AppCompatActivity() {
         var mSocketName : String = ""
     }
 
-    fun CONNECT(myinfoModel: MyInfo_Model) {
+    fun CONNECT() {
         try {
             mSocket.connect()
-
             // emit 이벤트 발생시키기
             // on 구독할 이벤트
-            mSocket.on("login", onConnect)
-            mSocket.on("userjoinedthechat", onNewUser)
-            mSocket.io()
-
         } catch (e : URISyntaxException) {
-            Log.e("node" , e.reason)
+            Log.e("MainActivity","CONNECT() -> error : ${e.reason}")
         }
-    }
-
-    val onNewUser: Emitter.Listener = Emitter.Listener {
-
-        var data = it[0] //String으로 넘어옵니다. JSONArray로 넘어오지 않도록 서버에서 코딩한 것 기억나시죠?
-        if (data is String) {
-            Log.e("onNewUser",data)
-//            chatList.add(Chat_Model(2,"",data,"",""))
-//            mAdapter.notifyItemInserted(chatList.size -1)
-        } else {
-            Log.d("error", "Something went wrong")
-        }
-    }
-
-    val onConnect: Emitter.Listener = Emitter.Listener {
-        //여기서 다시 "login" 이벤트를 서버쪽으로 username 과 함께 보냅니다.
-        //서버 측에서는 이 username을 whoIsON Array 에 추가를 할 것입니다.
-//        mSocket.emit("login", username)
-        var data : JSONObject = (it[0] as JSONObject)
-        mSocketName = data["ID"].toString()
-        Log.d("onConnect", "Socket is connected with ${data["ID"]}")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 777) {
+        if (requestCode == 666) {
             supportFragmentManager.findFragmentByTag(HOME)!!.onActivityResult(requestCode, resultCode, data)
         } else if (requestCode == 888) {
             supportFragmentManager.findFragmentByTag(HOME)!!.onActivityResult(requestCode, resultCode, data)
@@ -147,9 +126,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         dispose()
+        mSocket.close()
         mSocket.disconnect()
-        mSocket.off("login",onConnect)
-        mSocket.off("userjoinedthechat",onNewUser)
         super.onDestroy()
     }
 
@@ -157,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         // 메모리 누수를 막기위한 함수입니다. 모든 Observable 을 삭제 및 디비 인스턴스도 삭제.
         if (!disposable.isDisposed) {
             disposable.dispose()
-            Log.d("OnDestroy", "Main_Ac : CompositeDisposable() ->: Disposed")
+            Log.d("MainActivity", "CompositeDisposable() ->: Disposed")
         }
         loginDB?.destroyInstance()
     }
@@ -175,8 +153,9 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.Date.set(myinfoModel.Date)
         mainViewModel.Pic.set(myinfoModel.Pic)
         mainViewModel.Token.set(myinfoModel.Token)
+        Log.d("MainActivity", "MainActivity : -> Init_Fragment : ${myinfoModel}")
 
-        CONNECT(myinfoModel)
+        CONNECT()
         homeFragment = HomeFragment()
         supportFragmentManager.beginTransaction().add(R.id.nav_host_fragment, homeFragment!!, HOME).commit()
         CurrentFragment = homeFragment
@@ -186,10 +165,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home -> {
                     if (supportFragmentManager.findFragmentByTag(HOME) != null) { // 해당 프래그먼트가 존재한다면 !
                         if (CurrentFragment == homeFragment) {
-                            Log.d("newMainActivity", "newMainActivity : -> Home -> true ")
+                            Log.d("MainActivity", "MainActivity : -> Home -> true ")
 
                         } else {
-                            Log.d("newMainActivity", "newMainActivity : -> Home -> false ")
+                            Log.d("MainActivity", "MainActivity : -> Home -> false ")
                             supportFragmentManager.beginTransaction().show(homeFragment!!).hide(CurrentFragment!!).commit()
                         }
                     } else {

@@ -42,7 +42,7 @@ class Chat_Adapter(val Num : Int, var Member : ArrayList<User_Model>, val contex
                 itemView.User_Pic.setImageResource(R.drawable.ic_0)
             } else {
                 GlideApp.with(context)
-                    .load(context.getString(R.string.address)+chatModel.User_Pic)
+                    .load(context.getString(R.string.address_media)+chatModel.User_Pic)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(itemView.User_Pic)

@@ -7,4 +7,11 @@
         android:icon="@drawable/ic_search_white_24dp"
         app:showAsAction="always"
         />
+
+    <item
+        android:id="@+id/menu_write"
+        android:title="write"
+        android:icon="@drawable/ic_write_white_24dp"
+        app:showAsAction="always"
+        />
 </menu>

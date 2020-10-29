@@ -45,11 +45,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.WaitActivity"></activity>
+        <activity android:name=".activities.Edit_FeedActivity"></activity>
+        <activity android:name=".webrtc.VideoCallActivity" />
+        <activity android:name=".activities.WaitActivity" />
         <activity android:name=".activities.InvitedActivity" />
         <activity android:name=".webrtc.WebRTCActivity" />
-        <activity android:name=".activities.ChatActivity"
-                  android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activities.ChatActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".activities.Comment_Activity" />
 
         <service

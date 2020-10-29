@@ -51,7 +51,7 @@ class User_ProfileActivity : AppCompatActivity() {
             User_Pic.setImageResource(R.drawable.ic_0)
         } else {
             GlideApp.with(this@User_ProfileActivity)
-                .load(getString(R.string.address)+Pic)
+                .load(getString(R.string.address_media)+Pic)
                 .centerCrop()
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(User_Pic)

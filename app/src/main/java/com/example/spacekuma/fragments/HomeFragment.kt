@@ -8,12 +8,15 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.databinding.Observable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.spacekuma.BR
+import com.example.spacekuma.GlideApp
 import com.example.spacekuma.R
 import com.example.spacekuma.activities.*
 
@@ -25,6 +28,7 @@ import com.example.spacekuma.util.PaginationScrollListener
 import com.example.spacekuma.view_models.main.MainViewModel
 
 import kotlinx.android.synthetic.main.fragment_home.view.*
+import okhttp3.internal.notify
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,7 +46,7 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
 
     override fun Init() {
         (activity as AppCompatActivity).setSupportActionBar(bind.root.Home_Toolbar)
-        (activity as AppCompatActivity).supportActionBar?.title = "SpaceKuma"
+        (activity as AppCompatActivity).supportActionBar?.title = "@"+viewModel.ID.get()
         bind.root.shimmer_view_container.visibility = View.VISIBLE
         bind.root.shimmer_view_container.startShimmer()
         // https://stackoverflow.com/a/51047037
@@ -87,6 +91,12 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
         if (requestCode == 777 && resultCode == Activity.RESULT_OK) {
             Log.e("onActivityResult", "Home : 777")
             GET_NEWSFEED(0,true,viewModel.Num.get()!!)
+        } else if (requestCode == 666 && resultCode == Activity.RESULT_OK) {
+            Log.e("onActivityResult", "Home : 666")
+            data!!.getIntExtra("Position",0)
+            data.getStringExtra("FeedText")
+            mList[data.getIntExtra("Position",0)].Feed_Text = data.getStringExtra("FeedText")!!
+            newsfeedAdapter.notifyItemChanged(data.getIntExtra("Position",0))
         } else if (requestCode == 888 && resultCode == Activity.RESULT_OK){
             Log.e("onActivityResult", "Home : 888")
             var position = data!!.getIntExtra("Position",0)
@@ -95,7 +105,6 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
             Log.e("onActivityResult", "Home : 888 : position :$position")
             mList[position] = feed_item!!
             newsfeedAdapter.notifyItemChanged(position)
-
         } else {
             Log.e("onActivityResult", "else")
         }
@@ -109,10 +118,9 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_search -> startActivity(Intent(activity!!,SearchActivity::class.java))
-            R.id.menu_account -> startActivity(Intent(activity!!,SearchActivity::class.java))
+            R.id.menu_write -> startActivityForResult(Intent(activity!!, WriteFeedActivity::class.java).putExtra("Num",viewModel.Num.get()).putExtra("ID",viewModel.ID.get()),777)
             else -> null
         }
-
         return super.onOptionsItemSelected(item)
     }
 
@@ -129,7 +137,6 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
                         true -> {
                             // 새로고침해서 아이템 불러올 때.
                             newsfeedAdapter.clear()
-                            newsfeedAdapter.addHeaderItem()
                             newsfeedAdapter.addNextItem(response.body()!!)
                             newsfeedAdapter.notifyDataSetChanged()
                             isLoading = false
@@ -147,7 +154,6 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
                             Log.e("GET_NEWSFEED","Message : "+response.body())
                             Log.e("GET_NEWSFEED","Message : "+response.body()!![0].Message)
                             // onCreate 에서 처음 뉴스피드 아이템 불러올 때.
-                            newsfeedAdapter.addHeaderItem()
                             newsfeedAdapter.addNextItem(response.body()!!)
                             newsfeedAdapter.notifyDataSetChanged()
 
@@ -162,12 +168,12 @@ class HomeFragment : Main_Base_Fragment<FragmentHomeBinding>() {
                         newsfeedAdapter.notifyItemRemoved(mList.size-1)
                     } else {
                         newsfeedAdapter.clear()
-                        newsfeedAdapter.addHeaderItem()
                         newsfeedAdapter.notifyDataSetChanged()
                         bind.root.shimmer_view_container.visibility = View.GONE
                         bind.root.shimmer_view_container.stopShimmer()
                         bind.root.Swipe_Layout.visibility = View.VISIBLE
                     }
+
                     isLoading = false
                     bind.root.Swipe_Layout.isRefreshing = false
                     Log.e("GET_NEWSFEED","is Not Success Message : $response")

@@ -8,8 +8,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -18,7 +20,9 @@ import androidx.navigation.Navigation
 import com.example.spacekuma.BR
 import com.example.spacekuma.R
 import com.example.spacekuma.activities.MainActivity
+import com.example.spacekuma.activities.SplashActivity
 import com.example.spacekuma.data.Login_Model
+import com.example.spacekuma.databinding.SignUpIdFragmentBinding
 import com.example.spacekuma.databinding.SignUpNameFragmentBinding
 import com.example.spacekuma.db.LoginDB
 import com.example.spacekuma.retrofit.ApiClient
@@ -30,11 +34,13 @@ import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.sign_up__name__fragment.view.*
+import kotlinx.android.synthetic.main.sign_up__name__fragment.view.toolbar
+import kotlinx.android.synthetic.main.sign_up__pw__fragment.view.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class SignUP_Name_Fragment : Fragment() {
+class SignUP_Name_Fragment : SignUPBaseFragment<SignUpNameFragmentBinding>(), View.OnClickListener {
 
     /*
     1. Login_And_SignUP_Activity 에 필요한 플래그먼트 4개 중 1개입니다.
@@ -47,48 +53,51 @@ class SignUP_Name_Fragment : Fragment() {
     3. 그렇다면 (3).에 해당하는 로직이 실행됩니다.
      */
 
-    private lateinit var signUPViewModel: SignUPViewModel
-    lateinit var bind : SignUpNameFragmentBinding
+    /*
+    참고 사이트 : Navigation + Fragment + Toolbar + 뒤로가기 버튼 적용
+    https://stackoverflow.com/questions/26651602/display-back-arrow-on-toolbar
+    http://susemi99.kr/5438/
 
-    private var loginDB : LoginDB? = null
+    1. 프로그먼트 이동순서 : Login_Fragment <-> (메인플래그먼트)SignUP_Login_Navigator_Fragment <-> *SignUP_ID_Fragment* <-> SignUP_PW_Fragment <-> SignUP_Name_Fragment
+    2. 가입버튼 누를 시, 서버로 회원가입 로직 실행.
+     */
 
+    override val layoutID: Int = R.layout.sign_up__name__fragment
+    override val BRName: Int = BR.name
+
+    var loginDB : LoginDB? = null
     var disposable = CompositeDisposable()
 
-    var Token : String = ""
-
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        bind = DataBindingUtil.inflate(inflater, R.layout.sign_up__name__fragment,container,false)
-
-        signUPViewModel = ViewModelProviders.of(activity!!).get(SignUPViewModel::class.java)
-        bind.setVariable(BR.name,signUPViewModel)
-
-//        (1).툴바 셋업
-        (activity as AppCompatActivity).setSupportActionBar(bind.root.toolbar)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        (activity as AppCompatActivity).supportActionBar?.setDisplayShowTitleEnabled(false)
-        bind.root.toolbar.setNavigationOnClickListener {
-            Navigation.findNavController(bind.root).navigateUp()
+    override fun Init() {
+        (activity as AppCompatActivity).run {
+            setSupportActionBar(bind.root.toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
 
-//        (2).소프트키보드 완료 버튼 클릭 이벤트 처리
+        bind.root.Btn_Sign.setOnClickListener(this)
+
         bind.root.editText_name.setOnEditorActionListener(TextView.OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                if (signUPViewModel.Name_Boolean.get()!!) {
-//                    signUPViewModel.SignUP()
+                if (viewModel.Name_Boolean.get()!!) {
                     SignUP()
-                } else {
-
                 }
                 return@OnEditorActionListener true
             } else {
                 false
             }
         })
+    }
 
-        bind.root.Btn_Sign.setOnClickListener { SignUP() }
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.Btn_Sign -> { SignUP() }
+        }
+    }
 
-        return bind.root
+    fun ReturnToken () : String {
+        val pref : SharedPreferences = activity!!.getSharedPreferences("LoginInfo",0)
+        return pref.getString("Token","")!!
     }
 
     override fun onDestroy() {
@@ -107,12 +116,12 @@ class SignUP_Name_Fragment : Fragment() {
     }
 
     fun SignUP() {
-        ApiClient.getClient.SignUP(signUPViewModel.ID.get().toString(),signUPViewModel.PassWord.get().toString(),signUPViewModel.Name.get().toString(),ReturnToken()).enqueue(object :
+        ApiClient.getClient.SignUP(viewModel.ID.get().toString(),viewModel.PassWord.get().toString(),viewModel.Name.get().toString(),ReturnToken()).enqueue(object :
             Callback<Login_Model> {
             override fun onFailure(call: Call<Login_Model>, t: Throwable) {
                 Log.d("SignUP_ViewModel", "SignUP -> onFailure -> $t.")
-                signUPViewModel.Name_Boolean.set(false)
-                signUPViewModel.setMessage(4,signUPViewModel.Name_Message)
+                viewModel.Name_Boolean.set(false)
+                viewModel.setMessage(4,viewModel.Name_Message)
             }
 
             override fun onResponse(call: Call<Login_Model>, response: Response<Login_Model>) {
@@ -122,53 +131,47 @@ class SignUP_Name_Fragment : Fragment() {
                         Log.d("SignUP_ViewModel","response.body()!!.checkModel.Message : " + response.body()?.checkModel!!.Success)
                         Log.d("SignUP_ViewModel","response.body()!!.myinfomodel : " + response.body()?.myinfoModel)
 
-                        signUPViewModel.loginModel = response.body()!!.myinfoModel
-                        signUPViewModel.setMessage(5,signUPViewModel.Name_Message)
-//                        signUPViewModel._start.value = true
-                        signUPViewModel.Name_Boolean.set(true)
-                        signUPViewModel.Name_Message.set("진행 중....")
-                        var insert_Ob = Observable.just(signUPViewModel.loginModel!!)
+                        viewModel.loginModel = response.body()!!.myinfoModel
+                        viewModel.setMessage(5,viewModel.Name_Message)
+                        viewModel.Name_Boolean.set(true)
+                        viewModel.Name_Message.set("진행 중....")
+                        var insert_Ob = Observable.just(viewModel.loginModel!!)
                             .subscribeOn(Schedulers.io())
                             .subscribe( {
                                 LoginDB
                                     .getInstance(activity!!)!!
                                     .loginDao()
-                                    .insert(signUPViewModel.loginModel!!)
+                                    .insert(viewModel.loginModel!!)
                             }, {
-                                Log.e("MyTag", it.message)
+                                Log.e("MyTag", it.message!!)
                             })
                         disposable.add(insert_Ob)
 
                         val pref : SharedPreferences = activity!!.getSharedPreferences("LoginInfo",0)
                         val editor: SharedPreferences.Editor = pref.edit()
-                        editor.putInt("Num",signUPViewModel.loginModel!!.Num)
+                        editor.putInt("Num",viewModel.loginModel!!.Num)
                         editor.putString("Token", response.body()?.myinfoModel!!.Token)
                         editor.apply()
 
-                        Log.d("startMain", " -> : "+ signUPViewModel.loginModel!!.Num)
+                        Log.d("startMain", " -> : "+ viewModel.loginModel!!.Num)
 
-                        startActivity(Intent(activity!!, MainActivity::class.java))
+                        startActivity(Intent(activity!!, SplashActivity::class.java))
                         dispose()
                         activity!!.finish()
                     } else {
                         Log.d("SignUP_ViewModel","response.body()!!.Success : false. :  중복된 아이디")
-                        signUPViewModel.setMessage(3,signUPViewModel.Name_Message)
-                        signUPViewModel.Name_Boolean.set(false)
+                        viewModel.setMessage(3,viewModel.Name_Message)
+                        viewModel.Name_Boolean.set(false)
                     }
                 } else {
                     Log.d("SignUP_ViewModel", "response.isSuccessful : false.")
-                    signUPViewModel.setMessage(0,signUPViewModel.Name_Message)
-                    signUPViewModel.Name_Boolean.set(false)
+                    viewModel.setMessage(0,viewModel.Name_Message)
+                    viewModel.Name_Boolean.set(false)
 
                 }
             }
 
         })
-    }
-
-    fun ReturnToken () : String {
-        val pref : SharedPreferences = activity!!.getSharedPreferences("LoginInfo",0)
-        return pref.getString("Token","")!!
     }
 }
 

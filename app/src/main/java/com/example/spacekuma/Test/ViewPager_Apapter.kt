@@ -25,14 +25,14 @@ class ViewPagerAdapter(val media_List : ArrayList<Feed_Media_Uri_Model>,val cont
         val view = LayoutInflater.from(container.context).inflate(R.layout.test_page_item, container, false)
         container.addView(view)
 
-        if (media_List[position].View_Type == 1) {
+        if (media_List.size == 1 && media_List[position].View_Type == 1) {
             view.ImageView_Feed.visibility = View.VISIBLE
             view.exoPlayerView.visibility = View.GONE
             GlideApp.with(context)
-                .load(context.getString(R.string.address)+media_List[position].FileName)
+                .load(context.getString(R.string.address_media)+media_List[position].FileName)
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(view.ImageView_Feed)
-        } else if (media_List[position].View_Type == 2) {
+        } else if (media_List.size == 1 && media_List[position].View_Type == 2) {
             view.exoPlayerView.visibility = View.VISIBLE
             val exoPlayerView = view.findViewById<PlayerView>(R.id.exoPlayerView)
             var player : SimpleExoPlayer? = null
@@ -43,18 +43,40 @@ class ViewPagerAdapter(val media_List : ArrayList<Feed_Media_Uri_Model>,val cont
                 val defaultHttpDataSourceFactory =
                     DefaultHttpDataSourceFactory(context.getString(R.string.app_name))
                 val mediaSource = ProgressiveMediaSource.Factory(defaultHttpDataSourceFactory)
-                    .createMediaSource(Uri.parse(context.getString(R.string.address)+media_List[position].FileName))
+                    .createMediaSource(Uri.parse(context.getString(R.string.address_media)+media_List[position].FileName))
+                player!!.prepare(mediaSource)
+            }
+        } else if (media_List.size > 1 && media_List[position].View_Type == 1) {
+            view.TextView_Count.text = (position+1).toString() + "/"+media_List.size
+            view.TextView_Count.visibility = View.VISIBLE
+            view.ImageView_Feed.visibility = View.VISIBLE
+            view.exoPlayerView.visibility = View.GONE
+            GlideApp.with(context)
+                .load(context.getString(R.string.address_media)+media_List[position].FileName)
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .into(view.ImageView_Feed)
+        } else if (media_List.size > 1 && media_List[position].View_Type == 2) {
+            view.TextView_Count.text = (position+1).toString() + "/"+media_List.size
+            view.TextView_Count.visibility = View.VISIBLE
+            view.exoPlayerView.visibility = View.VISIBLE
+            val exoPlayerView = view.findViewById<PlayerView>(R.id.exoPlayerView)
+            var player : SimpleExoPlayer? = null
+
+            if (player == null) {
+                player = ExoPlayerFactory.newSimpleInstance(context)
+                exoPlayerView.player = player
+                val defaultHttpDataSourceFactory =
+                    DefaultHttpDataSourceFactory(context.getString(R.string.app_name))
+                val mediaSource = ProgressiveMediaSource.Factory(defaultHttpDataSourceFactory)
+                    .createMediaSource(Uri.parse(context.getString(R.string.address_media)+media_List[position].FileName))
                 player!!.prepare(mediaSource)
             }
         } else {
 
         }
-
-
         return view
 //        return super.instantiateItem(container, position)
     }
-
 
     // instantiateItem 오버라이드
     // 페이지 생성과 데이터 바인딩을 모두 맡음

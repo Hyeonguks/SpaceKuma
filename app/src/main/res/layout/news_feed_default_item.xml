@@ -35,13 +35,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ImageView_Writer_Pic" />
 
+    <me.relex.circleindicator.CircleIndicator
+        android:id="@+id/indicator"
+        android:layout_width="match_parent"
+        android:layout_height="26dp"
+        app:ci_drawable="@drawable/black_radius"
+        app:ci_height="7dp"
+        app:ci_margin="4dp"
+        app:ci_width="7dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ViewPager_FeedMedia" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Con_Like"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ViewPager_FeedMedia">
+        app:layout_constraintTop_toBottomOf="@+id/indicator">
 
         <ImageView
             android:id="@+id/ImageView_Before_Like"
@@ -87,7 +99,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@+id/Con_Like"
-        app:layout_constraintTop_toBottomOf="@+id/ViewPager_FeedMedia">
+        app:layout_constraintTop_toBottomOf="@+id/indicator">
 
         <ImageView
             android:id="@+id/ImageView_Comment"
@@ -132,7 +144,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="24dp"
         android:text="17시간 전"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -152,5 +164,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/TextView_Feed_Content" />
+
+    <ImageButton
+        android:id="@+id/Btn_Edit"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:backgroundTint="@android:color/transparent"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/ViewPager_FeedMedia"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_more_vert_black_24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

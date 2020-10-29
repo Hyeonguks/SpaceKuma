@@ -20,7 +20,7 @@ data class NewsFeed_Model(
     val Writer_Pic: String, // user_account
     val Feed_Media_Uri: ArrayList<Feed_Media_Uri_Model>?, // feed_media
     val Uploaded_Date: String, // feed
-    val Feed_Text: String, // feed
+    var Feed_Text: String, // feed
     val Message: String
 
 ) : Parcelable

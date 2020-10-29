@@ -36,7 +36,7 @@ class Search_Adapter(val context: Context, val userList: ArrayList<User_Model>) 
                 User_Pic.setImageResource(R.drawable.ic_0)
             } else {
                 GlideApp.with(context)
-                    .load(context.getString(R.string.address)+userModel.Pic)
+                    .load(context.getString(R.string.address_media)+userModel.Pic)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(User_Pic)

@@ -1,7 +1,5 @@
 package com.example.spacekuma.activities
 
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.OvalShape
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,18 +7,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.example.spacekuma.GlideApp
 import com.example.spacekuma.R
 import com.example.spacekuma.data.Check_Model
 import com.example.spacekuma.data.Comment_Model
-import com.example.spacekuma.data.FeedDetail_Model
 import com.example.spacekuma.recycler_view_adapters.Comment_Adapter
 import com.example.spacekuma.retrofit.ApiClient
 import com.example.spacekuma.util.PaginationScrollListener
-import com.example.spacekuma.util.TimeString
 import kotlinx.android.synthetic.main.activity_comment_.*
-import kotlinx.android.synthetic.main.fragment_home.view.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -101,16 +94,25 @@ class Comment_Activity : AppCompatActivity() {
             }
         })
 
-        commentAdapter.itemClick = object : Comment_Adapter.ItemClick{
-            override fun onReplyClick(view: View,feedNum: Int,Comment_Num: Int,Writer_Name: String,Comment_Text: String) {
-                reply_ = true
-                Parent_Num = Comment_Num
-                Log.e("Comment_Activity","전송 버튼 클릭 $Comment_Num")
-                Con_Recomment.visibility = View.VISIBLE
-                Con_Cancle.visibility = View.VISIBLE
+        commentAdapter.itemClick = object : Comment_Adapter.ItemClick {
+            override fun onReplyClick(view: View,feedNum: Int,Comment_Num: Int,Writer_Name: String,Comment_Text: String,event_code: Int) {
+                if (event_code == 1) {
+                    reply_ = true
+                    Parent_Num = Comment_Num
+                    Log.e("Comment_Activity","전송 버튼 클릭 $Comment_Num")
+                    Con_Recomment.visibility = View.VISIBLE
+                    Con_Cancle.visibility = View.VISIBLE
 
-                TextView_Comment_Writer_Name.text = Writer_Name
-                TextView_Parent_Comment.text = Comment_Text
+                    TextView_Comment_Writer_Name.text = Writer_Name
+                    TextView_Parent_Comment.text = Comment_Text
+                } else if (event_code == 2) {
+                    reply_ = false
+                    Parent_Num = 0
+                    Con_Recomment.visibility = View.GONE
+                    Con_Cancle.visibility = View.GONE
+                } else {
+
+                }
 
             }
         }
@@ -123,9 +125,9 @@ class Comment_Activity : AppCompatActivity() {
 
         TextView_Send.setOnClickListener {
             if (reply_) {
-                Upload_Comment(Feed_Num,2,Num,Parent_Num,EditText_Comment.text.toString())
+                Upload_Comment(Feed_Num,2,Num,Parent_Num,EditText_Comment_Activity.text.toString())
             } else {
-                Upload_Comment(Feed_Num,1,Num,0,EditText_Comment.text.toString())
+                Upload_Comment(Feed_Num,1,Num,0,EditText_Comment_Activity.text.toString())
             }
         }
     }
@@ -212,7 +214,7 @@ class Comment_Activity : AppCompatActivity() {
                         reply_ = false
                         Con_Recomment.visibility = View.GONE
                         Con_Cancle.visibility = View.GONE
-                        EditText_Comment.text.clear()
+                        EditText_Comment_Activity.text.clear()
                         Get_Comment_List(Feed_Num,0,Num,true)
                     } else {
                         Log.e("onResponse","Upload_Comment : "+response.body()!!.Message)

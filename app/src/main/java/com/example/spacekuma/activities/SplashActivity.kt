@@ -28,17 +28,18 @@ class SplashActivity : AppCompatActivity() {
 
     /*
     1. 앱이 실행되면 제일 처음 보이게되는 스플래쉬 액티비티입니다.
-    2. SharedPreferences 에서 로그인 기록이 있는지 확인합니다.
-    3. 로그인 기록이 있다면, Room DataBase 에 저장되어있는 ID 와 PassWord 가 일치하는지 확인.
-    4. 일치한다면, 서버에서 받아온 값을 저장합니다. 그리고 메인 액티비티로 이동합니다.
-    5. 로그인 기록이 없다면, Login_Activity 로 이동합니다. (회원가입 or 로그인이 가능합니다.)
+    2. SharedPreferences 에서 로그인 기록(유저 고유번호 : Num)이 있는지 확인합니다.
+    3. 로그인 기록이 있다면, SharedPreferences 에 저장된 Num 을 기준으로 Room DataBase 에 저장되어있는 ID 와 PassWord 가 존재하는지 확인.
+    4. 존재하지 않는다면 Login_And_SignUP_Activity(SignUP_Login_Navigator_Fragment)로 이동.
+    5. 존재한다면, 저장되어있는 값을 서버 DB 의 값과 비교하여 일치하면 로그인 그리고 MainActivity 로 이동.
+    6. 로그인 기록이 없다면, Login_And_SignUP_Activity 로 이동합니다. (회원가입 or 로그인이 가능합니다.)
 
-    **
-    로그인 기록이 있다면 SharedPreferences 에 저장되어있는 고유번호(Num)를 이용해서,
-    해당 Num 에 일치하는 Room DB 에서 ID, PassWord 를 가져옵니다.
-
-    고유번호(Num)은 Mysql DB 에서 사용하는 컬럼입니다.
-    **
+    문제 사항
+    1. FCM 토큰 이슈 : 앱 실행시 FirebaseInstanceId.getInstance().instanceId 로 FCM 토큰 값을 SharedPreferences 에 저장중이다.
+    문제는 첫 실행 시에 문제인데, 첫 실행하고 서버와 SharedPreferences 에 토큰을 저장. 상대방 측에서 나에게 FCM 보내면 심지어 노드서버가 죽고 FCM 이 오지 않음.
+    찾아보니 유효하지 않은 토큰으로 메세지를 보내려하니까 죽음.
+    도대체 왜??? 토큰 값도 로그에 잘찍혀서 해당 토큰을 로컬 및 서버에 저장했는데??????현재 방안으로는 앱을 두번정도 재실행해야 토큰이 유효해서 죽지 않더라.
+    첫 실행에 유효한 토큰을 얻을수있는 방법은 무엇인가???????
 
      */
 
@@ -51,57 +52,50 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        FirebaseInstanceId.getInstance().instanceId
-            .addOnCompleteListener(OnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.w("onCreate()", "getInstanceId failed", task.exception)
-                    return@OnCompleteListener
-                } else {
-                    Log.d("onCreate()", "isSuccessful ")
-                    // Get new Instance ID token
-                    val token = task.result?.token
-                    val pref : SharedPreferences = getSharedPreferences("LoginInfo",0)
-                    Num = pref.getInt("Num",0)
-                    val editor: SharedPreferences.Editor = pref.edit()
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+            Log.d("onCreate()", "isSuccessful ")
+            // Get new Instance ID token
+            val token = it.token
+            val pref : SharedPreferences = getSharedPreferences("LoginInfo",0)
+            Num = pref.getInt("Num",0)
 
-                    ApiClient.getClient.UpdateFcm(Num,token!!).enqueue(object :Callback<Check_Model> {
-                        override fun onFailure(call: Call<Check_Model>, t: Throwable) {
-                            GO_TO_LOGIN_ACTIVITY()
-                            Log.d("onCreate()", "onFailure : $t")
-                            Log.d("onCreate()", "onFailure")
-                            Log.d("onCreate()", "onFailure")
+            ApiClient.getClient.UpdateFcm(Num,token).enqueue(object :Callback<Check_Model> {
+                override fun onFailure(call: Call<Check_Model>, t: Throwable) {
+                    GO_TO_LOGIN_ACTIVITY()
+                    Log.d("onCreate()", "onFailure : $t")
 
-                        }
-                        override fun onResponse(call: Call<Check_Model>,response: Response<Check_Model>) {
-                            if (response.isSuccessful) {
-                                if (response.body()!!.Success) {
-                                    Log.d("onCreate()", "onResponse isSuccessful")
-
-                                    Log.d("onCreate()", ": Num -> $Num")
-                                    Log.d("onCreate()", ": Token -> $token")
-
-                                    editor.putString("Token",token)
-                                    editor.apply()
-
-                                    when (Num) {
-                                        0 -> GO_TO_LOGIN_ACTIVITY()
-                                        else -> GO_TO_MAIN_ACTIVITY ()
-                                    }
-                                    Log.d("SplashActivity", "onCreate() :$token")
-                                } else {
-                                    Log.d("onCreate()", "onResponse !isSuccessful")
-
-                                    GO_TO_LOGIN_ACTIVITY()
-                                }
-
-                            } else {
-
-                            }
-                        }
-
-                    })
                 }
+                override fun onResponse(call: Call<Check_Model>,response: Response<Check_Model>) {
+                    if (response.isSuccessful) {
+                        if (response.body()!!.Success) {
+                            val editor: SharedPreferences.Editor = pref.edit()
+                            Log.d("onCreate()", "onResponse isSuccessful")
+
+                            Log.d("onCreate()", ": Num -> $Num")
+                            Log.d("onCreate()", ": Token -> $token")
+
+                            editor.putString("Token",token)
+                            editor.apply()
+
+                            // Num 이 0 이라면 로그인 기록이 없기때문에 로그인 페이지로 이동.
+                            when (Num) {
+                                0 -> GO_TO_LOGIN_ACTIVITY()
+                                else -> GO_TO_MAIN_ACTIVITY ()
+                            }
+                            Log.d("SplashActivity", "onCreate() :$token")
+                        } else {
+                            Log.d("onCreate()", "onResponse !isSuccessful")
+                            GO_TO_LOGIN_ACTIVITY()
+                        }
+
+                    } else {
+
+                    }
+                }
+
             })
+        }
+
 
     }
 
@@ -171,8 +165,8 @@ class SplashActivity : AppCompatActivity() {
 
                         Log.d("startMain", " -> : "+ response.body()?.myinfoModel!!.Num)
 
-                        startActivity(Intent(this@SplashActivity, MainActivity::class.java))
                         dispose()
+                        startActivity(Intent(this@SplashActivity, MainActivity::class.java))
                         this@SplashActivity.finish()
 
                     } else {
